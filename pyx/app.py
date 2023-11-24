@@ -6,9 +6,18 @@ from flask_socketio import SocketIO
 import inspect
 import os
 
+class User:
+    def __init__(self, socket, sid):
+        self.socket = socket
+        self.sid = sid
+
+    def emit(self, event, data):
+        self.socket.emit(event, data)
+
+
 class App:
     def __init__(self):
-        pass
+        self.users = {} # {sid(str): User}
 
     def __render__(self, user):
         return createElement('div', {}, 'Hello World')
@@ -40,11 +49,10 @@ class App:
 
         @socketio.on('connect')
         def connect():
-            print('connected')
-            
-
+            self.users[request.sid] = User(socketio, request.sid)
+        
         @socketio.on('disconnect')
         def disconnect():
-            print('disconnected')
+            del self.users[request.sid]
 
         socketio.run(app, host=host, port=port)
