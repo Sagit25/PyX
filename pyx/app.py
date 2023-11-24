@@ -1,23 +1,25 @@
 
 from .createElement import createElement
 
-from flask import Flask, send_from_directory
+from flask import Flask, send_from_directory, request
 from flask_socketio import SocketIO
 import inspect
 import os
 
 class User:
-    def __init__(self, socket, sid):
-        self.socket = socket
+    def __init__(self, app, sid):
+        self.app = app
         self.sid = sid
 
     def emit(self, event, data):
-        self.socket.emit(event, data)
+        self.app.socketio.emit(event, data)
 
 
 class App:
     def __init__(self):
         self.users = {} # {sid(str): User}
+        self.flask_app = None
+        self.socketio = None
 
     def __render__(self, user):
         return createElement('div', {}, 'Hello World')
@@ -39,9 +41,16 @@ class App:
         app = Flask(__name__, static_folder=os.path.join(running_path, 'public')) 
         socketio = SocketIO(app)
 
+        self.flask_app = app
+        self.socketio = socketio
+
         @app.route('/')
         def index():
             return send_from_directory(os.path.join(running_path, 'public'), 'index.html')
+        
+        @app.route('/public/pyx.js')
+        def pyxjs():
+            return send_from_directory(os.path.join(module_path, 'assets'), 'pyx.js')
 
         @app.route('/<path:path>')
         def serve(path):
@@ -49,10 +58,17 @@ class App:
 
         @socketio.on('connect')
         def connect():
-            self.users[request.sid] = User(socketio, request.sid)
+            user = User(self, request.sid)
+            self.users[request.sid] = user
         
+        @socketio.on('request_root')
+        def request_root():
+            user = self.users[request.sid]
+            user.emit('root', self.__render__(user))
+
         @socketio.on('disconnect')
         def disconnect():
+            user = self.users[request.sid]
             del self.users[request.sid]
 
         socketio.run(app, host=host, port=port)
