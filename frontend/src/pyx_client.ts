@@ -50,6 +50,7 @@ export class PyXClient {
     return rootElement;
   }
   useRenderable(id: string): PyXNode {
-      throw new Error("Method not implemented.");
+    console.log('useRenderable', id);
+      throw new Error("Renderable not implemented yet");
   }
 }

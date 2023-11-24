@@ -28,16 +28,13 @@ export function convert(pyxElement: PyXNode, client: PyXClient): ReactNode {
                 ...pyxElement.children.map((element) => convert(element, client))
             );
         }
-        else if (typeof pyxElement.tag === 'object' && '__renderable__' in pyxElement.tag) {
-            if (typeof pyxElement.tag.__renderable__ !== 'string') {
-                console.error('PyXElement tag.id should be a string. Got:', pyxElement.tag.id);
-                return null;
-            }
-            return createElement(Renderable, {'id': pyxElement.tag.__renderable__, 'client': client});
+    }
+    else if (typeof pyxElement === 'object' && '__renderable__' in pyxElement) {
+        if (typeof pyxElement.__renderable__ !== 'string') {
+            console.error('PyX ID should be a string.\n', pyxElement);
+            return null;
         }
-        else {
-            console.error('Unknown PyX node type. PyXElement type should be strings(HTML tags) or numbers(PyXIDs).');
-        }
+        return createElement(Renderable, {'id': pyxElement.__renderable__, 'client': client});
     }
     else {
         console.error('Unknown PyX node type. PyXFragments and PyXPortals are not implemented yet.\n', pyxElement);

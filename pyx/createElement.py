@@ -1,14 +1,23 @@
 
 from .hashid import hashID
 
-def createElement(tag, attrs, *children):
-    if type(tag) != str:
-        if hasattr(tag, '__render__'):  # Renderable
-            tag = {
-                '__renderable__': hashID(tag),
-            }
+def convert(obj):
+    if hasattr(obj, '__render__'):
+        return {'__renderable__': hashID(obj)}
+    elif isinstance(obj, list):
+        return [convert(item) for item in obj]
+    elif isinstance(obj, dict):
+        return {k: convert(v) for k, v in obj.items()}
+    elif isinstance(obj, tuple):
+        return tuple(convert(item) for item in obj)
+    elif isinstance(obj, set):
+        return {convert(item) for item in obj}
+    else: # TODO: Handle other types
+        return obj
+
+def createElement(tag, props, *children):
     return {
         'tag': tag,
-        'props': attrs,
-        'children': children
+        'props': convert(props),
+        'children': convert(children)
     }
