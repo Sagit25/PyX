@@ -1,8 +1,14 @@
 
+from .hashid import hashID
+
 def createElement(tag, attrs, *children):
-    # TODO: Serialize other types
+    if type(tag) != str:
+        if hasattr(tag, '__render__'):  # Renderable
+            tag = {
+                '__renderable__': hashID(tag),
+            }
     return {
         'tag': tag,
-        'attrs': attrs,
+        'props': attrs,
         'children': children
     }

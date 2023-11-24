@@ -4,14 +4,14 @@ type PyXNode = PyXChild | PyXFragment | PyXPortal | boolean | null | undefined;
 type PyXChild = PyXElement | PyXText;
 
 type PyXElement = {
-    type: string | PyXID;
+    tag: string | {'__type__': 'Renderable', 'id': PyXID};
     props: any;
-    key: Key | null;
+    children: PyXNode[];
 };
 
 type Key = string | number | null;
 
-type PyXID = string | null;
+type PyXID = string;
 
 type PyXText = string | number;
 

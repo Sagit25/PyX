@@ -1,7 +1,7 @@
 
 import { ReactNode, useEffect, useRef, useState } from 'react';
 import { io, Socket } from 'socket.io-client';
-import { PyXElement } from './pyx_types';
+import { PyXElement, PyXNode } from './pyx_types';
 import { convert } from './pyx_convert'
 
 export class PyXClient {
@@ -46,7 +46,10 @@ export class PyXClient {
     }
     useEffect(requestRoot, [root]);
     
-    const rootElement = convert(root);
+    const rootElement = convert(root, this);
     return rootElement;
+  }
+  useRenderable(id: string): PyXNode {
+      throw new Error("Method not implemented.");
   }
 }
