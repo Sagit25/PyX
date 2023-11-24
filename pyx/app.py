@@ -64,7 +64,7 @@ class App:
         @socketio.on('request_root')
         def request_root():
             user = self.users[request.sid]
-            user.emit('root', self.__render__(user))
+            user.emit('root', {'element': self.__render__(user)})
 
         @socketio.on('disconnect')
         def disconnect():

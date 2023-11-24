@@ -1,14 +1,10 @@
 
-import { useEffect, useRef, useState } from 'react';
+import { ReactNode, useEffect, useRef, useState } from 'react';
 import { io, Socket } from 'socket.io-client';
+import { PyXElement } from './pyx_types';
+import { convert } from './pyx_convert'
 
-type PyXElement = {
-    type: string;
-    props: {[key: string]: any};
-    children: (PyXElement | string)[];
-};
-
-class PyXCient {
+export class PyXClient {
   private socket: Socket;
   constructor() {
     this.socket = io();
@@ -20,39 +16,37 @@ class PyXCient {
     });
   }
 
-  public useRoot() {
+  public useRoot(): ReactNode {
     const [root, setRoot] = useState<PyXElement | null>(null);
     const rootLoadedRef = useRef<boolean>(false);
     const rootRequestRef = useRef<number | null>(null);
     useEffect(() => {
-        this.socket.on('root', (data) => {
-            const { element } = data;
-            const rootElement: PyXElement = JSON.parse(element);
-            setRoot(rootElement);
-            rootLoadedRef.current = true;
-            if (rootRequestRef.current) {
-                clearTimeout(rootRequestRef.current);
-                rootRequestRef.current = null;
-            }
-        });
-        return () => {
-            this.socket.off('root');
+      this.socket.on('root', (data) => {
+        const { element } = data;
+        setRoot(element);
+        rootLoadedRef.current = true;
+        if (rootRequestRef.current) {
+          clearTimeout(rootRequestRef.current);
+          rootRequestRef.current = null;
         }
+      });
+      return () => {
+        this.socket.off('root');
+      }
     }, []);
     
     const requestRoot = () => {
-        if (rootRequestRef.current) {
-            clearTimeout(rootRequestRef.current);
-        }
-        if (!rootLoadedRef.current) {
-            this.socket.emit('root');
-            rootRequestRef.current = setTimeout(requestRoot, 10000);
-        }
+      if (rootRequestRef.current) {
+        clearTimeout(rootRequestRef.current);
+      }
+      if (!rootLoadedRef.current) {
+        this.socket.emit('request_root');
+        rootRequestRef.current = setTimeout(requestRoot, 10000);
+      }
     }
     useEffect(requestRoot, [root]);
     
-    return root;
+    const rootElement = convert(root);
+    return rootElement;
   }
 }
-
-export const client = new PyXCient();

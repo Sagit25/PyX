@@ -1,4 +1,9 @@
 
+import { useMemo } from "react"
+import { PyXClient } from "./pyx_client"
+
 export default function App() {
-  return <div></div>
+  const client: PyXClient = useMemo(() => new PyXClient(), [])
+  const root = client.useRoot();
+  return root;
 }
