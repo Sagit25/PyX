@@ -1,6 +1,8 @@
 
 import hashlib
 
+obj_hash_map = {}
+
 def hashID(obj):
     hasher = hashlib.md5()
     input_string = str(id(obj))
@@ -13,4 +15,8 @@ def hashID(obj):
     while hash_int > 0:
         hash_int, remainder = divmod(hash_int, base)
         hash_base62 = characters[remainder] + hash_base62
+    obj_hash_map[hash_base62] = obj
     return hash_base62
+
+def getObj(obj_hash):
+    return obj_hash_map[obj_hash]

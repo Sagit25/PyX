@@ -1,5 +1,6 @@
 
 from .createElement import createElement
+from .hashid import hashID, getObj
 
 from flask import Flask, send_from_directory, request
 from flask_socketio import SocketIO
@@ -10,14 +11,39 @@ class User:
     def __init__(self, app, sid):
         self.app = app
         self.sid = sid
+        self.pending_renders = {}
+        self.dependancy_map = {}    # {obj_hash(str): set(key(str))}
 
     def emit(self, event, data):
         self.app.socketio.emit(event, data)
 
+    def render(self, obj):
+        obj_hash = hashID(obj)
+        if hasattr(obj.__class__, '__original_setattr__'):
+            obj.__class__.__setattr__ = obj.__class__.__original_setattr__
+        self.dependancy_map[obj_hash] = set()
+        obj_old_getattr = obj.__class__.__getattribute__
+        def getattr_proxy(target, key):
+            self.dependancy_map[obj_hash].add(key)
+            return obj_old_getattr(target, key)
+        obj.__class__.__getattribute__ = getattr_proxy
+        self.pending_renders[obj_hash] = obj.__render__(self)
+        obj.__class__.__getattribute__ = obj_old_getattr
+
+        obj_old_setattr = obj.__class__.__setattr__
+        def setattr_proxy(target, key, value):
+            if key in self.dependancy_map[obj_hash]:
+                self.render(obj)
+            return obj_old_setattr(target, key, value)
+        obj.__class__.__original_setattr__ = obj_old_setattr
+        obj.__class__.__setattr__ = setattr_proxy
+
+        self.emit('render', {'element': self.pending_renders[obj_hash], 'id': obj_hash})
+
 
 class App:
     def __init__(self):
-        self.users = {} # {sid(str): User}
+        self.users = {} # {sid(str): user(User)}
         self.flask_app = None
         self.socketio = None
 
@@ -64,7 +90,13 @@ class App:
         @socketio.on('request_root')
         def request_root():
             user = self.users[request.sid]
-            user.emit('root', {'element': self.__render__(user)})
+            user.emit('root', {'id': hashID(self)})
+
+        @socketio.on('request_renderable')
+        def request_renderable(data):
+            user = self.users[request.sid]
+            obj = getObj(data['id'])
+            user.render(obj)
 
         @socketio.on('disconnect')
         def disconnect():
