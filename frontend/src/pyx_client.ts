@@ -5,7 +5,7 @@ import { PyXElement } from './pyx_types';
 import { convert } from './pyx_convert'
 
 export class PyXClient {
-  private socket: Socket;
+  socket: Socket;
   private renderable_handlers: { [id: string]: (element: PyXElement) => void };
   constructor() {
     this.socket = io();

@@ -1,6 +1,7 @@
 
 from .hashid import hashID
 
+
 def convert(obj):
     if hasattr(obj, '__render__'):
         return {'__renderable__': hashID(obj)}
@@ -12,8 +13,14 @@ def convert(obj):
         return tuple(convert(item) for item in obj)
     elif isinstance(obj, set):
         return {convert(item) for item in obj}
-    else: # TODO: Handle other types
+    elif hasattr(obj, '__call__'):  # Event Handler
+        obj_hash = hashID(obj)
+        return {'__callable__': obj_hash}
+    else:
         return obj
+
+# TODO: Remove from map when there's no more dependants
+# ex) check reference count
 
 def createElement(tag, props, *children):
     return {

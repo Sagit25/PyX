@@ -32,9 +32,10 @@ class User:
 
         obj_old_setattr = obj.__class__.__setattr__
         def setattr_proxy(target, key, value):
+            ret = obj_old_setattr(target, key, value)
             if key in self.dependancy_map[obj_hash]:
                 self.render(obj)
-            return obj_old_setattr(target, key, value)
+            return ret
         obj.__class__.__original_setattr__ = obj_old_setattr
         obj.__class__.__setattr__ = setattr_proxy
 
@@ -48,7 +49,7 @@ class App:
         self.socketio = None
 
     def __render__(self, user):
-        return createElement('div', {}, 'Hello World')
+        return createElement('div', {}, 'Hello World')  # TODO: Change it to default page
 
     def run(self, host, port):
         running_path = os.path.dirname(os.path.abspath(inspect.getmodule(inspect.stack()[1][0]).__file__))
@@ -97,6 +98,13 @@ class App:
             user = self.users[request.sid]
             obj = getObj(data['id'])
             user.render(obj)
+        
+        @socketio.on('eventHandler')
+        def eventHandler(data):
+            user = self.users[request.sid]
+            obj = getObj(data['id'])
+            e = data['e']
+            result = obj(e)
 
         @socketio.on('disconnect')
         def disconnect():
