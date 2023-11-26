@@ -4,9 +4,28 @@ import { io, Socket } from 'socket.io-client';
 import { PyXElement } from './pyx_types';
 import { convert } from './pyx_convert'
 
+class JSObjectManager {
+  private objects: { [id: string]: any };
+  constructor() {
+    this.objects = {};
+  }
+  public add(obj: any) {
+    const id = "jsobj_" + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+    this.objects[id] = obj;
+    return id;
+  }
+  public get(id: string): any {
+    return this.objects[id];
+  }
+  public remove(id: string) {
+    delete this.objects[id];
+  }
+}
+
 export class PyXClient {
   socket: Socket;
   private renderable_handlers: { [id: string]: (element: PyXElement) => void };
+  private jsobj_manager: JSObjectManager;
   constructor() {
     this.socket = io();
     this.socket.on('connect', () => {
@@ -25,6 +44,48 @@ export class PyXClient {
         handler(element);
       }
     });
+    
+    this.jsobj_manager = new JSObjectManager();
+
+    this.socket.on('request', (msg) => {
+      const { data, callbackID } = msg;
+      const response = this.handleRequest(data);
+      this.socket.emit('response', { callbackID, data: response });
+    });
+  }
+
+  public addJSObject(obj: any): string {
+    return this.jsobj_manager.add(obj);
+  }
+  
+  private handleRequest(data: any): any {
+    if (data.type === 'jsobj_getattr') {
+      const { id, key } = data;
+      const obj = this.jsobj_manager.get(id);
+      if (obj === undefined) {
+        console.error('JS object not found: ' + id);
+        return null;
+      }
+      if (obj[key] === undefined) return null;
+      let value;
+      try {
+        value = obj[key];
+      } catch (e) {
+        console.error(e);
+        return null;
+      }
+      if (['string', 'number', 'boolean', 'null'].includes(typeof value)) {
+        return value;
+      } else if (typeof value === 'object') {
+        return {'__jsobj__': this.jsobj_manager.add(value)};
+      }
+      return null;
+    }
+    else if (data.type === 'jsobj_del') {
+      const { id } = data;
+      this.jsobj_manager.remove(id);
+      return null;
+    }
   }
 
   public useRoot(): ReactNode {

@@ -3,20 +3,6 @@ import { createElement } from "react";
 import { Renderable } from "./Renderable.tsx";
 import { PyXClient } from "./pyx_client.ts";
 
-function serializable(obj: any, depth: number = 0) {
-    if (depth > 2) return null; // Prevent infinite recursion
-    const ret: any = {};
-    for (const key in obj) {
-        if (typeof obj[key] in ['string', 'number', 'boolean', 'undefined', 'null']) {
-            ret[key] = obj[key];
-        }
-        else if (typeof obj[key] === 'object') {
-            ret[key] = serializable(obj[key], depth + 1);
-        }
-    }
-    return ret;
-}
-
 export function convert(pyxElement: any, client: PyXClient): any {
     if (typeof pyxElement === 'boolean') {
         return null;
@@ -62,7 +48,7 @@ export function convert(pyxElement: any, client: PyXClient): any {
         }
         const callableID = pyxElement.__callable__;
         return (e: any) => {
-            client.socket.emit('eventHandler', {'id': callableID, 'e': serializable(e)});
+            client.socket.emit('event_handler', {'id': callableID, 'e': client.addJSObject(e)});
         }
     }
     else {

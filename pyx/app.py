@@ -1,11 +1,15 @@
 
 from .createElement import createElement
 from .hashid import hashID, getObj
+from .requestHandler import RequestHandler
+from .jsObject import JSObject
 
 from flask import Flask, send_from_directory, request
 from flask_socketio import SocketIO
+
 import inspect
 import os
+from gevent.queue import Queue
 
 class User:
     def __init__(self, app, sid):
@@ -14,8 +18,22 @@ class User:
         self.pending_renders = {}
         self.dependancy_map = {}    # {obj_hash(str): set(key(str))}
 
+        self.request_handler = RequestHandler()
+    
+    # Use gevent to wait for response if callback is not provided
+    def request(self, data, callback=None):
+        if callback:
+            self.app.socketio.emit('request', self.request_handler.request(data, callback), room=self.sid)
+        else:
+            request_queue = Queue()
+            def callback(data):
+                request_queue.put(data)
+            self.app.socketio.emit('request', self.request_handler.request(data, callback), room=self.sid)
+            return request_queue.get()
+        
+
     def emit(self, event, data):
-        self.app.socketio.emit(event, data)
+        self.app.socketio.emit(event, data, room=self.sid) 
 
     def render(self, obj):
         obj_hash = hashID(obj)
@@ -40,7 +58,6 @@ class User:
         obj.__class__.__setattr__ = setattr_proxy
 
         self.emit('render', {'element': self.pending_renders[obj_hash], 'id': obj_hash})
-
 
 class App:
     def __init__(self):
@@ -99,12 +116,18 @@ class App:
             obj = getObj(data['id'])
             user.render(obj)
         
-        @socketio.on('eventHandler')
-        def eventHandler(data):
+        @socketio.on('event_handler')
+        def event_handler(data):
             user = self.users[request.sid]
             obj = getObj(data['id'])
-            e = data['e']
+            e = JSObject(data['e'], user)   # data['e'] should not be read after this line
             result = obj(e)
+        
+        @socketio.on('response')
+        def response(data):
+            print(data)
+            user = self.users[request.sid]
+            user.request_handler.handleResponse(data)
 
         @socketio.on('disconnect')
         def disconnect():
