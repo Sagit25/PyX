@@ -15,7 +15,13 @@ def convert(obj):
         return {convert(item) for item in obj}
     elif hasattr(obj, '__call__'):  # Event Handler
         obj_hash = hashID(obj)
-        return {'__callable__': obj_hash}
+        cache = obj
+        if hasattr(obj, '__func__'):
+            cache = obj.__func__
+        preload_props = {}
+        if hasattr(cache, '__preload_props__'):
+            preload_props = cache.__preload_props__  
+        return {'__callable__': obj_hash, '__preload__': preload_props}
     else:
         return obj
 

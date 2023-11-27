@@ -2,7 +2,7 @@
 from .createElement import createElement
 from .hashid import hashID, getObj
 from .requestHandler import RequestHandler
-from .jsObject import JSObject
+from .jsObject import JSObject, JSObjectWithTracker
 
 from flask import Flask, send_from_directory, request
 from flask_socketio import SocketIO
@@ -120,7 +120,9 @@ class App:
         def event_handler(data):
             user = self.users[request.sid]
             obj = getObj(data['id'])
-            e = JSObject(data['e'], user)   # data['e'] should not be read after this line
+            # TODO: Add tracker that adds frequently used attributes to preload list
+            e = JSObjectWithTracker(data['e'], user, tracker_root=obj, tracker_dir=[])   # data['e'] should not be read after this line
+            e.load(data['preload'])
             result = obj(e)
         
         @socketio.on('response')

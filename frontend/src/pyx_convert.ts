@@ -3,6 +3,32 @@ import { createElement } from "react";
 import { Renderable } from "./Renderable.tsx";
 import { PyXClient } from "./pyx_client.ts";
 
+function format_obj(target: any, format: any): any {
+    if (typeof target === 'string' || typeof target === 'number' || typeof target === 'boolean' || target === null) {
+        return target;
+    }
+    if (Array.isArray(target)) {
+        const ret = [];
+        for (let i = 0; i < target.length; i++) {
+            ret[i] = format_obj(target[i], format);
+        }
+        return ret;
+    }
+    else {
+        const ret: any = {};
+        for (const key in target) {
+            if (key in format) {
+                if (typeof target[key] === 'object') {
+                    ret[key] = format_obj(target[key], format[key]);
+                } else {
+                    ret[key] = target[key];
+                }
+            }
+        }
+        return ret;
+    }
+}
+
 export function convert(pyxElement: any, client: PyXClient): any {
     if (typeof pyxElement === 'boolean') {
         return null;
@@ -47,8 +73,13 @@ export function convert(pyxElement: any, client: PyXClient): any {
             return null;
         }
         const callableID = pyxElement.__callable__;
+        const preload = pyxElement.__preload__;
         return (e: any) => {
-            client.socket.emit('event_handler', {'id': callableID, 'e': client.addJSObject(e)});
+            const response: any = {'id': callableID, 'e': client.addJSObject(e)};
+            if (preload) {
+                response['preload'] = format_obj(e, preload);
+            }
+            client.socket.emit('event_handler', response);
         }
     }
     else {
@@ -56,3 +87,4 @@ export function convert(pyxElement: any, client: PyXClient): any {
     }
     return null;
 }
+
