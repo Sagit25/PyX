@@ -127,7 +127,6 @@ class App:
         
         @socketio.on('response')
         def response(data):
-            print(data)
             user = self.users[request.sid]
             user.request_handler.handleResponse(data)
 
