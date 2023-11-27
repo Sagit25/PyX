@@ -1,0 +1,20 @@
+bidict==0.22.1
+click @ file:///croot/click_1698129812380/work
+Flask @ file:///work/ci_py311/flask_1676827140363/work
+Flask-SocketIO==5.3.6
+gevent==23.9.1
+gevent-websocket==0.10.1
+greenlet==3.0.1
+gunicorn==21.2.0
+h11==0.14.0
+itsdangerous @ file:///tmp/build/80754af9/itsdangerous_1621432558163/work
+Jinja2 @ file:///work/ci_py311/jinja2_1676823587943/work
+MarkupSafe @ file:///work/ci_py311/markupsafe_1676823507015/work
+packaging==23.2
+python-engineio==4.8.0
+python-socketio==5.10.0
+simple-websocket==1.0.0
+Werkzeug @ file:///croot/werkzeug_1679489717957/work
+wsproto==1.2.0
+zope.event==5.0
+zope.interface==6.1
