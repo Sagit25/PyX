@@ -11,6 +11,7 @@ setup(
     python_requires='>=3.7',
     packages=find_packages(where='src'),
     package_dir={'': 'src'},
+    package_data={'': ['assets/*']},
     include_package_data=True,
     long_description=open('README.md').read(),
     long_description_content_type='text/markdown',
