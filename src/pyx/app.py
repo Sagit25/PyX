@@ -70,8 +70,7 @@ class App:
 
     def run(self, host, port):
         running_path = os.path.dirname(os.path.abspath(inspect.getmodule(inspect.stack()[1][0]).__file__))
-        # module_path = os.path.dirname(os.path.abspath(__file__))
-        module_path = pkg_resources.resource_filename(__name__, '')
+        module_path = os.path.dirname(os.path.abspath(__file__))
         
         # Create public folder if it doesn't exist
         if not os.path.exists(os.path.join(running_path, 'public')):
