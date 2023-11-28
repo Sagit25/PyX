@@ -1,5 +1,9 @@
 
-import pyx
+import pyx  # It is recommended to import pyx first, before importing other packages
+
+from os import environ
+PORT = int(environ.get('PORT', 5000))   # Get port from environment
+
 
 class Counter:
     def __init__(self):
@@ -15,16 +19,7 @@ class Counter:
             pyx.createElement('button', {'onClick': self.increment}, 'Increment')
         )
 
-class App(pyx.App):
-    def __init__(self):
-        super().__init__()
-        self.counter = Counter()
+app = pyx.App(component=Counter())
 
-    def __render__(self, user):
-        return pyx.createElement('div', None, self.counter)
-
-app = App()
-
-
-app.run(host='0.0.0.0', port=8080)
+app.run(host='0.0.0.0', port=PORT)
 

@@ -59,14 +59,31 @@ class User:
 
         self.emit('render', {'element': self.pending_renders[obj_hash], 'id': obj_hash})
 
+
 class App:
-    def __init__(self):
+    def __init__(self, component=None):
         self.users = {} # {sid(str): user(User)}
         self.flask_app = None
         self.socketio = None
+        self.defaultComponent = component
 
     def __render__(self, user):
-        return createElement('div', {}, 'Hello World')  # TODO: Change it to default page
+        if self.defaultComponent:
+            return createElement('span', None, self.defaultComponent)
+        else:
+            return createElement('div', {
+                'style': {
+                    'display': 'flex',
+                    'flex-direction': 'column',
+                    'align-items': 'center',
+                    'justify-content': 'center',
+                    'height': '100vh'
+                }
+            },
+                createElement('h1', None, 'Hello, PyX!'),
+                createElement('p', None, 'Provide a component to App constructor'),
+                createElement('p', None, 'or override __render__ method to render something else')
+            )
 
     def run(self, host, port):
         running_path = os.path.dirname(os.path.abspath(inspect.getmodule(inspect.stack()[1][0]).__file__))
