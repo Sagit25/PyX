@@ -1,6 +1,6 @@
 # PyX Framework
 
-<div style="display: flex; flex-direction: row; justify-content: center;"><img src="./assets/pyx.svg" width="500" height="500"></div>
+![logo](assets/pyx.svg)
 
 ## Introduction
 PyX Framework is a framework that enables Python objects to be easily rendered on a web server. This allows Python developers to integrate their backend logic with web interfaces seamlessly.
