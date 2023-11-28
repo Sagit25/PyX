@@ -1,7 +1,4 @@
 
-from gevent import monkey
-monkey.patch_all()
-
 import pyx
 
 class Counter:
