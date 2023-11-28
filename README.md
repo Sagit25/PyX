@@ -14,7 +14,7 @@ PyX Framework is a framework that enables Python objects to be easily rendered o
 To install PyX Framework, use pip:
 
 ```bash
-pip install pyxframework
+pip install pyx-react
 ```
 
 ## Usage
